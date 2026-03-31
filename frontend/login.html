@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InformaPeru - Intranet</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f0f4ff;
+            color: #1f1f1f;
+        }
+
+        .login-wrapper {
+            min-height: 100vh;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            background-color: #fff;
+        }
+
+        .login-slider-container {
+            position: relative;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .login-slider {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            min-height: 100%;
+            height: 100%;
+            width: 100%;
+        }
+
+        .login-slider__track {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            transition: transform 0.8s ease-in-out;
+        }
+
+        .login-slider__slide {
+            position: relative;
+            min-width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            filter: brightness(0.95);
+        }
+
+        .login-slider__overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(220deg, rgba(12, 77, 162, 0.85), rgba(12, 147, 190, 0.75));
+            mix-blend-mode: multiply;
+        }
+
+        .login-slider__content {
+            position: relative;
+            padding: 3rem;
+            max-width: 480px;
+            z-index: 2;
+            text-align: center;
+            color: white;
+        }
+
+        .login-slider__badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            color: #0c4da2;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+
+        .login-slider__title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            line-height: 1.2;
+        }
+
+        .login-slider__description {
+            font-size: 1.25rem;
+            margin-bottom: 0;
+            opacity: 0.95;
+        }
+
+        .login-slider__indicators {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+            z-index: 3;
+        }
+
+        .login-slider__indicator {
+            display: block;
+            width: 42px;
+            height: 4px;
+            border-radius: 999px;
+            background-color: rgba(255, 255, 255, 0.35);
+            transition: background-color 0.3s ease, width 0.3s ease;
+            cursor: pointer;
+        }
+
+        .login-slider__indicator.is-active {
+            width: 56px;
+            background-color: #ffffff;
+        }
+
+        .login-form-container {
+            padding: 5rem 4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 0;
+            overflow: auto;
+            background-color: #fff;
+        }
+
+        .auth-card {
+            box-shadow: 0 25px 50px -12px rgba(12, 77, 162, 0.35);
+            border: none;
+            border-radius: 1rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            width: 100%;
+            max-width: 480px;
+        }
+
+        .auth-card__header {
+            background-color: #fff;
+            border: none;
+            padding: 2rem 2rem 0;
+            text-align: left;
+        }
+
+        .login-logo {
+            max-width: 220px;
+            margin-bottom: 1.5rem;
+        }
+
+        .auth-card__title {
+            font-weight: 700;
+            color: #32508E;
+            font-size: 1.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-card__subtitle {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        .auth-card__body {
+            padding: 1.5rem 2rem 2rem;
+        }
+
+        .login-form {
+            margin-top: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: #1f1f1f;
+        }
+
+        .input-group {
+            display: flex;
+            align-items: stretch;
+            width: 100%;
+            border: 1px solid #d8dbe0;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+        }
+
+        .input-group:focus-within {
+            border-color: #0c4da2;
+            box-shadow: 0 0 0 0.25rem rgba(12, 77, 162, 0.25);
+        }
+
+        .input-group-text {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #e9ecef;
+            border: none;
+            color: #6c757d;
+        }
+
+        .input-group-text svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .form-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: none;
+            outline: none;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-input::placeholder {
+            color: #adb5bd;
+        }
+
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0.375rem;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert-danger {
+            background-color: #f8d7da;
+            color: #842029;
+            border: 1px solid #f5c2c7;
+        }
+
+        .forgot-link {
+            text-align: right;
+            margin-bottom: 1rem;
+        }
+
+        .forgot-link a {
+            color: #0c4da2;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+
+        .forgot-link a:hover {
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1rem;
+            background-color: #0c4da2;
+            color: #ffffff;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.15s ease-in-out;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            background-color: #013a78;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        .submit-btn.loading {
+            position: relative;
+            color: transparent;
+        }
+
+        .submit-btn.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #ffffff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .login-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .login-form-container {
+                padding: 3rem 1.5rem 2rem;
+            }
+
+            .login-slider-container {
+                height: 320px;
+            }
+
+            .login-slider {
+                min-height: 320px;
+            }
+
+            .login-slider__content {
+                padding: 2.5rem 2rem;
+            }
+
+            .login-slider__title {
+                font-size: 2rem;
+            }
+
+            .login-slider__description {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-wrapper">
+        <!-- Form Container -->
+        <div class="login-form-container">
+            <div class="auth-card">
+                <div class="auth-card__header">
+                    <img src="src/assets/images/logo_informa.png" alt="InformaPeru" class="login-logo" />
+                    <h1 class="auth-card__title">Somos tu mejor aliado en desarrollo</h1>
+                    <p class="auth-card__subtitle">Inicia sesión con tus credenciales para acceder al panel de
+                        soluciones inteligentes.</p>
+                </div>
+                <div class="auth-card__body">
+                    <form class="login-form" id="loginForm">
+                        <div class="alert alert-danger" id="errorAlert"></div>
+
+                        <div class="form-group">
+                            <label for="username" class="form-label">Usuario</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                </span>
+                                <input id="username" name="username" type="text" class="form-input"
+                                    placeholder="Ingrese su nombre de usuario" required autocomplete="username" />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Contraseña</label>
+                            <div class="input-group">
+                                <span class="input-group-text">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                </span>
+                                <input id="password" name="password" type="password" class="form-input"
+                                    placeholder="Ingrese su contraseña" required autocomplete="current-password" />
+                            </div>
+                        </div>
+
+                        <div class="forgot-link">
+                            <a href="#recuperar">¿Problemas para ingresar?</a>
+                        </div>
+
+                        <button type="submit" class="submit-btn" id="submitBtn">
+                            INGRESAR
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slider Container -->
+        <div class="login-slider-container">
+            <div class="login-slider">
+                <div class="login-slider__track" id="sliderTrack">
+                    <div class="login-slider__slide" style="background-image: url('src/assets/images/1_IA.webp')"></div>
+                    <div class="login-slider__slide"
+                        style="background-image: url('src/assets/images/2_Ubicacion.webp')"></div>
+                    <div class="login-slider__slide" style="background-image: url('src/assets/images/3_Ahorro.webp')">
+                    </div>
+                    <div class="login-slider__slide"
+                        style="background-image: url('src/assets/images/4_Portfolio.webp')"></div>
+                    <div class="login-slider__slide" style="background-image: url('src/assets/images/5_Geo.webp')">
+                    </div>
+                    <div class="login-slider__slide" style="background-image: url('src/assets/images/6_Cobranza.webp')">
+                    </div>
+                </div>
+                <div class="login-slider__overlay"></div>
+                <div class="login-slider__content">
+                    <span class="login-slider__badge">Soluciones InformaPeru</span>
+                    <h2 class="login-slider__title" id="slideTitle">INTELIGENCIA ARTIFICIAL</h2>
+                    <p class="login-slider__description" id="slideDescription">Potencia tus decisiones con IA</p>
+                </div>
+                <div class="login-slider__indicators" id="indicators"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== BASE DE DATOS DE USUARIOS ==========
+        const USERS_DB = [
+            {
+                id: 5,
+                username: 'huancayo2025',
+                password: '$$huancayo2025$$',
+                email: 'usuario1@ejemplo.com',
+                full_name: 'InformaPeru Huancayo',
+                role: 'CLIENT',
+                dashboard_type: 'huancayo'
+            },
+            {
+                id: 6,
+                username: 'huancayo.2025',
+                password: '$huancayo$2025!',
+                email: 'usuario2@ejemplo.com',
+                full_name: 'InformaPeru Huancayo',
+                role: 'CLIENT',
+                dashboard_type: 'huancayo'
+            },
+            {
+                id: 8,
+                username: 'proempresa2025',
+                password: '$proempresa.2025$',
+                email: 'user1@ejemplo.com',
+                full_name: 'InformaPeru Proempresa',
+                role: 'CLIENT',
+                dashboard_type: 'proempresa'
+            },
+            {
+                id: 10,
+                username: 'maynas2025',
+                password: 'Reina2025$$',
+                email: 'user1@ejemplo.com',
+                full_name: 'InformaPeru Maynas',
+                role: 'CLIENT',
+                dashboard_type: 'maynas2025'
+            },
+            {
+                id: 11,
+                username: 'indicadores2026',
+                password: 'index.2026.01',
+                email: 'user1@ejemplo.com',
+                full_name: 'InformaPeru',
+                role: 'CLIENT',
+                dashboard_type: 'indicadores2026'
+            },
+            {
+                id: 12,
+                username: 'Usuarioica',
+                password: 'Ica2026$$.',
+                email: 'user1@ejemplo.com',
+                full_name: 'InformaPeru ICA',
+                role: 'CLIENT',
+                dashboard_type: 'icaDashboard'
+            },
+            {
+                id: 13,
+                username: 'Usuario.ica',
+                password: 'CajaIca2026$$.',
+                email: 'user1@ejemplo.com',
+                full_name: 'InformaPeru ICA',
+                role: 'CLIENT',
+                dashboard_type: 'icaDashboard'
+            }
+
+
+        ];
+
+        const SESSION_KEY = 'informa_session';
+        const DASHBOARD_URL = 'dashboard.html';
+
+        // ========== SLIDER CONFIGURATION ==========
+        const slides = [
+            { title: 'INTELIGENCIA ARTIFICIAL', description: 'Potencia tus decisiones con IA' },
+            { title: 'GEOLOCALIZACIÓN', description: 'Ubica y optimiza tu gestión' },
+            { title: 'AHORRO INTELIGENTE', description: 'Reduce costos y maximiza resultados' },
+            { title: 'GESTIÓN DE PORTFOLIO', description: 'Control total de tu cartera' },
+            { title: 'ANÁLISIS GEOGRÁFICO', description: 'Visualiza datos en tiempo real' },
+            { title: 'COBRANZA EFECTIVA', description: 'Automatiza y mejora tus procesos' }
+        ];
+
+        let currentSlide = 0;
+        const sliderTrack = document.getElementById('sliderTrack');
+        const slideTitle = document.getElementById('slideTitle');
+        const slideDescription = document.getElementById('slideDescription');
+        const indicatorsContainer = document.getElementById('indicators');
+
+        // Create indicators
+        slides.forEach((_, index) => {
+            const indicator = document.createElement('span');
+            indicator.className = `login-slider__indicator ${index === 0 ? 'is-active' : ''}`;
+            indicator.addEventListener('click', () => goToSlide(index));
+            indicatorsContainer.appendChild(indicator);
+        });
+
+        function goToSlide(index) {
+            currentSlide = index;
+            sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+            slideTitle.textContent = slides[currentSlide].title;
+            slideDescription.textContent = slides[currentSlide].description;
+
+            document.querySelectorAll('.login-slider__indicator').forEach((ind, i) => {
+                ind.classList.toggle('is-active', i === currentSlide);
+            });
+        }
+
+        setInterval(() => {
+            currentSlide = (currentSlide + 1) % slides.length;
+            goToSlide(currentSlide);
+        }, 2000);
+
+        // ========== CHECK IF ALREADY LOGGED IN ==========
+        const existingSession = localStorage.getItem(SESSION_KEY);
+        if (existingSession) {
+            window.location.href = DASHBOARD_URL;
+        }
+
+        // ========== FORM HANDLING ==========
+        const loginForm = document.getElementById('loginForm');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const submitBtn = document.getElementById('submitBtn');
+        const errorAlert = document.getElementById('errorAlert');
+
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!username || !password) {
+                showError('Por favor complete todos los campos');
+                return;
+            }
+
+            setLoading(true);
+            hideError();
+
+            // Simulate network delay
+            setTimeout(() => {
+                // Find user in database
+                const user = USERS_DB.find(u => u.username === username && u.password === password);
+
+                if (user) {
+                    // Successful login
+                    const sessionData = {
+                        id: user.id,
+                        username: user.username,
+                        email: user.email,
+                        full_name: user.full_name,
+                        role: user.role,
+                        dashboard_type: user.dashboard_type,
+                        loginTime: new Date().toISOString()
+                    };
+
+                    localStorage.setItem(SESSION_KEY, JSON.stringify(sessionData));
+                    window.location.href = DASHBOARD_URL;
+                } else {
+                    // Failed login
+                    showError('Usuario o contraseña incorrectos');
+                    setLoading(false);
+                }
+            }, 500);
+        });
+
+        function setLoading(isLoading) {
+            submitBtn.disabled = isLoading;
+            submitBtn.classList.toggle('loading', isLoading);
+        }
+
+        function showError(message) {
+            errorAlert.textContent = message;
+            errorAlert.classList.add('show');
+        }
+
+        function hideError() {
+            errorAlert.classList.remove('show');
+        }
+
+        [usernameInput, passwordInput].forEach(input => {
+            input.addEventListener('input', hideError);
+        });
+    </script>
+</body>
+
+</html>

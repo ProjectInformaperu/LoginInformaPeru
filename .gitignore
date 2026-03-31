@@ -1,0 +1,21 @@
+
+
+# Python / backend
+backend/.venv/
+backend/__pycache__/
+backend/*.pyc
+backend/.pytest_cache/
+
+# Entornos
+.env
+*.env
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+
+# Logs y temporales
+*.log
+.DS_Store
+Thumbs.db

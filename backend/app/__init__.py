@@ -1,0 +1,2 @@
+"""InformaPeru backend application package."""
+

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test CORS - InformaPeru</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #0c4da2;
+            margin-top: 0;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+
+        .status.loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        button {
+            background: #0c4da2;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+
+        button:hover {
+            background: #013a78;
+        }
+
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            border-left: 4px solid #0c4da2;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border-left: 4px solid #0c4da2;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <h1>🔍 Test de Conexión CORS</h1>
+
+        <div class="info-box">
+            <strong>URL del Backend:</strong> https://informaperu-backend.onrender.com<br>
+            <strong>Origin actual:</strong> <span id="currentOrigin"></span>
+        </div>
+
+        <button onclick="testHealth()">1️⃣ Test Health Check</button>
+        <button onclick="testLogin()">2️⃣ Test Login Endpoint</button>
+        <button onclick="testPreflight()">3️⃣ Test CORS Preflight</button>
+
+        <div id="status"></div>
+        <div id="results"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://informaperu-backend.onrender.com';
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+
+        // Mostrar origin actual
+        document.getElementById('currentOrigin').textContent = window.location.origin;
+
+        function showStatus(message, type = 'loading') {
+            statusDiv.innerHTML = `<div class="status ${type}">${message}</div>`;
+        }
+
+        function showResult(title, data, isSuccess = true) {
+            const resultHTML = `
+                <h3 style="color: ${isSuccess ? '#155724' : '#721c24'}">${title}</h3>
+                <pre>${typeof data === 'object' ? JSON.stringify(data, null, 2) : data}</pre>
+            `;
+            resultsDiv.innerHTML = resultHTML;
+        }
+
+        async function testHealth() {
+            try {
+                showStatus('🔄 Probando endpoint /health...', 'loading');
+
+                const response = await fetch(`${API_BASE}/health`, {
+                    method: 'GET',
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showStatus('✅ Health check exitoso!', 'success');
+                    showResult('Health Check Response', data, true);
+                } else {
+                    showStatus('❌ Health check falló', 'error');
+                    showResult('Error Response', data, false);
+                }
+            } catch (error) {
+                showStatus('❌ Error de red o CORS', 'error');
+                showResult('Error Details', {
+                    message: error.message,
+                    type: error.name,
+                    hint: error.message === 'Failed to fetch'
+                        ? 'Esto es un error CORS. El backend no permite solicitudes desde este origin.'
+                        : 'Error de conexión'
+                }, false);
+            }
+        }
+
+        async function testLogin() {
+            try {
+                showStatus('🔄 Probando endpoint /api/auth/login...', 'loading');
+
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: 'test',
+                        password: 'test123'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || response.status === 422) {
+                    showStatus('✅ CORS funciona correctamente (aunque las credenciales son inválidas)', 'success');
+                    showResult('Login Response (Expected Error)', {
+                        status: response.status,
+                        message: 'CORS está funcionando. El servidor respondió (aunque con credenciales inválidas).',
+                        response: data
+                    }, true);
+                } else if (response.ok) {
+                    showStatus('✅ Login exitoso!', 'success');
+                    showResult('Login Response', data, true);
+                } else {
+                    showStatus('⚠️ Respuesta del servidor', 'error');
+                    showResult('Server Response', data, false);
+                }
+            } catch (error) {
+                showStatus('❌ Error CORS bloqueando la solicitud', 'error');
+                showResult('CORS Error', {
+                    message: error.message,
+                    type: error.name,
+                    diagnosis: 'El backend no tiene configurado correctamente BACKEND_CORS_ORIGINS',
+                    solution: 'Verifica en Render que la variable BACKEND_CORS_ORIGINS incluye: ' + window.location.origin
+                }, false);
+            }
+        }
+
+        async function testPreflight() {
+            showStatus('ℹ️ Información sobre CORS Preflight', 'loading');
+            showResult('CORS Preflight Info', {
+                what: 'Las solicitudes con Content-Type: application/json requieren una petición OPTIONS (preflight)',
+                current_origin: window.location.origin,
+                required_header: 'Access-Control-Allow-Origin: ' + window.location.origin,
+                check: 'Abre las DevTools (F12) → Network tab → Intenta hacer login y busca la petición OPTIONS',
+                expected: 'Deberías ver respuestas con headers Access-Control-Allow-*'
+            }, true);
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            setTimeout(testHealth, 500);
+        });
+    </script>
+</body>
+
+</html>

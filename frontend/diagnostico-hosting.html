@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico cPanel - InformaPeru</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #0c4da2;
+            margin-bottom: 10px;
+        }
+
+        .info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #0c4da2;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .test-section h3 {
+            color: #155724;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background: #0c4da2;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #013a78;
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c2c7;
+        }
+
+        .result.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .status.ok {
+            background: #28a745;
+            color: white;
+        }
+
+        .status.fail {
+            background: #dc3545;
+            color: white;
+        }
+
+        .status.warn {
+            background: #ffc107;
+            color: black;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 10px 0;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>🔍 Diagnóstico de Hosting cPanel</h1>
+        <p style="color: #6c757d; margin-bottom: 20px;">Herramienta para diagnosticar problemas de conexión con tu
+            backend</p>
+
+        <div class="info">
+            <strong>📍 Ubicación actual:</strong> <span id="currentLocation"></span><br>
+            <strong>🌐 Protocolo:</strong> <span id="currentProtocol"></span><br>
+            <strong>🔒 HTTPS:</strong> <span id="httpsStatus"></span>
+        </div>
+
+        <!-- Test 1: Verificar que el archivo se sirve correctamente -->
+        <div class="test-section">
+            <h3>1️⃣ Test de Archivos Estáticos</h3>
+            <p>Verifica que tu cPanel está sirviendo correctamente los archivos HTML/CSS/JS</p>
+            <button onclick="testStaticFiles()">Ejecutar Test</button>
+            <div id="staticResult"></div>
+        </div>
+
+        <!-- Test 2: Probar Fetch API -->
+        <div class="test-section">
+            <h3>2️⃣ Test de Fetch API</h3>
+            <p>Verifica si tu navegador puede hacer peticiones fetch desde este dominio</p>
+            <button onclick="testFetchAPI()">Probar Fetch Simple</button>
+            <div id="fetchResult"></div>
+        </div>
+
+        <!-- Test 3: Conectividad al Backend -->
+        <div class="test-section">
+            <h3>3️⃣ Test de Conectividad Backend</h3>
+            <div class="grid">
+                <div>
+                    <label><strong>URL del Backend:</strong></label>
+                    <input type="text" id="backendUrl" value="https://informaperu-backend.onrender.com"
+                        style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 5px;">
+                </div>
+            </div>
+            <button onclick="testBackendHealth()">Test Health (/health)</button>
+            <button onclick="testBackendLogin()">Test Login (/api/auth/login)</button>
+            <button onclick="testBackendCORS()">Test CORS Preflight</button>
+            <div id="backendResult"></div>
+        </div>
+
+        <!-- Test 4: Mixed Content -->
+        <div class="test-section">
+            <h3>4️⃣ Test de Mixed Content</h3>
+            <p>Verifica si hay problemas de HTTP vs HTTPS (Mixed Content)</p>
+            <button onclick="testMixedContent()">Verificar</button>
+            <div id="mixedResult"></div>
+        </div>
+
+        <!-- Test 5: Headers del servidor -->
+        <div class="test-section">
+            <h3>5️⃣ Headers del Servidor cPanel</h3>
+            <p>Revisa los headers que devuelve tu hosting</p>
+            <button onclick="testServerHeaders()">Obtener Headers</button>
+            <div id="headersResult"></div>
+        </div>
+    </div>
+
+    <script>
+        // Información inicial
+        document.getElementById('currentLocation').textContent = window.location.href;
+        document.getElementById('currentProtocol').textContent = window.location.protocol;
+        document.getElementById('httpsStatus').textContent = window.location.protocol === 'https:' ? '✅ Sí' : '⚠️ No (puede causar problemas)';
+
+        function showResult(elementId, html, type = 'info') {
+            const el = document.getElementById(elementId);
+            el.innerHTML = `<div class="result ${type}">${html}</div>`;
+        }
+
+        // Test 1: Archivos estáticos
+        function testStaticFiles() {
+            const tests = {
+                'JavaScript habilitado': typeof fetch !== 'undefined',
+                'LocalStorage disponible': typeof localStorage !== 'undefined',
+                'SessionStorage disponible': typeof sessionStorage !== 'undefined',
+                'Cookies habilitadas': navigator.cookieEnabled,
+                'HTTPS': window.location.protocol === 'https:'
+            };
+
+            let html = '<pre>';
+            let allOk = true;
+            for (const [test, result] of Object.entries(tests)) {
+                const status = result ? '✅' : '❌';
+                html += `${status} ${test}: ${result}\n`;
+                if (!result) allOk = false;
+            }
+            html += '</pre>';
+
+            showResult('staticResult', html, allOk ? 'success' : 'error');
+        }
+
+        // Test 2: Fetch API
+        async function testFetchAPI() {
+            try {
+                showResult('fetchResult', '⏳ Probando Fetch API...', 'info');
+
+                // Test simple: obtener este mismo archivo
+                const response = await fetch(window.location.href, {
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+
+                if (response.ok) {
+                    showResult('fetchResult', `
+                        <strong>✅ Fetch API funciona correctamente</strong><pre>
+Status: ${response.status} ${response.statusText}
+Headers presentes: ${response.headers.entries ? 'Sí' : 'No'}
+                        </pre>
+                    `, 'success');
+                } else {
+                    showResult('fetchResult', `
+                        <strong>⚠️ Respuesta inusual</strong><pre>
+Status: ${response.status} ${response.statusText}
+                        </pre>
+                    `, 'warn');
+                }
+            } catch (error) {
+                showResult('fetchResult', `
+                    <strong>❌ Error en Fetch API</strong><pre>
+${error.name}: ${error.message}
+
+Posible causa: Firewall o configuración del hosting bloqueando peticiones
+                    </pre>
+                `, 'error');
+            }
+        }
+
+        // Test 3a: Backend Health
+        async function testBackendHealth() {
+            const backendUrl = document.getElementById('backendUrl').value;
+            try {
+                showResult('backendResult', '⏳ Conectando al backend...', 'info');
+
+                const response = await fetch(`${backendUrl}/health`, {
+                    method: 'GET',
+                    cache: 'no-cache'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult('backendResult', `
+                        <strong>✅ Backend responde correctamente</strong><pre>
+URL: ${backendUrl}/health
+Status: ${response.status}
+Response: ${JSON.stringify(data, null, 2)}
+                        </pre>
+                    `, 'success');
+                } else {
+                    showResult('backendResult', `
+                        <strong>❌ Backend respondió con error</strong><pre>
+Status: ${response.status} ${response.statusText}
+Response: ${JSON.stringify(data, null, 2)}
+                        </pre>
+                    `, 'error');
+                }
+            } catch (error) {
+                showResult('backendResult', `
+                    <strong>❌ No se pudo conectar al backend</strong><pre>
+Error: ${error.message}
+
+Causas posibles:
+1. CORS no configurado en el backend
+2. Firewall de cPanel bloqueando peticiones externas
+3. Mixed Content (HTTPS → HTTP o viceversa)
+4. Backend caído o URL incorrecta
+
+Solución:
+- Verifica que el backend esté funcionando
+- Configura CORS en el backend
+- Contacta a tu proveedor de hosting
+                    </pre>
+                `, 'error');
+            }
+        }
+
+        // Test 3b: Backend Login
+        async function testBackendLogin() {
+            const backendUrl = document.getElementById('backendUrl').value;
+            try {
+                showResult('backendResult', '⏳ Probando endpoint de login...', 'info');
+
+                const response = await fetch(`${backendUrl}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'test', password: 'test' })
+                });
+
+                const data = await response.json();
+
+                if (response.status === 401 || response.status === 422) {
+                    showResult('backendResult', `
+                        <strong>✅ Login endpoint funciona (CORS OK)</strong><pre>
+Status: ${response.status} (esperado - credenciales incorrectas)
+Response: ${JSON.stringify(data, null, 2)}
+
+Esto significa que CORS está configurado correctamente!
+                        </pre>
+                    `, 'success');
+                } else if (response.status === 405) {
+                    showResult('backendResult', `
+                        <strong>❌ Error 405 - Backend no desplegado</strong><pre>
+Status: ${response.status} Method Not Allowed
+Response: ${JSON.stringify(data, null, 2)}
+
+El backend NO tiene los cambios desplegados.
+Necesitas hacer deploy en Render.
+                        </pre>
+                    `, 'error');
+                } else {
+                    showResult('backendResult', `
+                        <strong>⚠️ Respuesta inesperada</strong><pre>
+Status: ${response.status}
+Response: ${JSON.stringify(data, null, 2)}
+                        </pre>
+                    `, 'warn');
+                }
+            } catch (error) {
+                showResult('backendResult', `
+                    <strong>❌ Error de conexión</strong><pre>
+Error: ${error.message}
+
+Diagnóstico:
+${error.message === 'Failed to fetch' ?
+                        '🔒 CORS bloqueado O firewall del hosting' :
+                        '⚠️ Error de red o backend no disponible'}
+
+Soluciones:
+1. Verifica CORS en el backend
+2. Contacta soporte de cPanel sobre firewall
+3. Prueba desactivar mod_security en cPanel
+                    </pre>
+                `, 'error');
+            }
+        }
+
+        // Test 3c: CORS Preflight
+        async function testBackendCORS() {
+            const backendUrl = document.getElementById('backendUrl').value;
+            showResult('backendResult', `
+                <strong>ℹ️ Test de CORS Preflight</strong><pre>
+Para ver los headers CORS:
+1. Abre DevTools (F12)
+2. Ve a Network tab
+3. Click "Test Login" arriba
+4. Busca la petición OPTIONS
+5. Revisa los Response Headers
+
+Busca:
+- Access-Control-Allow-Origin: ${window.location.origin}
+- Access-Control-Allow-Methods: POST, GET, ...
+- Access-Control-Allow-Headers: Content-Type, ...
+
+Si NO aparecen → CORS no configurado en backend
+                </pre>
+            `, 'info');
+        }
+
+        // Test 4: Mixed Content
+        function testMixedContent() {
+            const currentProtocol = window.location.protocol;
+            const backendUrl = document.getElementById('backendUrl').value;
+            const backendProtocol = backendUrl.startsWith('https') ? 'https:' : 'http:';
+
+            let issues = [];
+            if (currentProtocol === 'https:' && backendProtocol === 'http:') {
+                issues.push('⚠️ Mixed Content: Intentando conectar HTTP desde HTTPS (bloqueado por el navegador)');
+            }
+
+            const html = issues.length > 0 ?
+                `<strong>⚠️ Problemas detectados:</strong><pre>${issues.join('\n')}\n\nSolución: Usar HTTPS en el backend también</pre>` :
+                `<strong>✅ No hay problemas de Mixed Content</strong><pre>Frontend: ${currentProtocol}\nBackend: ${backendProtocol}</pre>`;
+
+            showResult('mixedResult', html, issues.length > 0 ? 'error' : 'success');
+        }
+
+        // Test 5: Server Headers
+        async function testServerHeaders() {
+            try {
+                showResult('headersResult', '⏳ Obteniendo headers...', 'info');
+
+                const response = await fetch(window.location.href, {
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+
+                let html = '<strong>Headers del servidor:</strong><pre>';
+                const headers = {};
+                for (const [key, value] of response.headers.entries()) {
+                    headers[key] = value;
+                }
+                html += JSON.stringify(headers, null, 2);
+                html += '</pre>';
+
+                // Verificar headers importantes
+                if (!headers['access-control-allow-origin']) {
+                    html += '<br><strong>⚠️ Nota:</strong> Este servidor no tiene headers CORS (es normal para archivos estáticos)';
+                }
+
+                showResult('headersResult', html, 'info');
+            } catch (error) {
+                showResult('headersResult', `❌ Error: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+
+</html>
