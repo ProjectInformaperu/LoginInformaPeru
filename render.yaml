@@ -4,7 +4,7 @@ services:
     env: docker
     plan: free
     region: oregon
-    repo: https://github.com/InformaPeru-com/loginInformaPeru.git
+    repo: https://github.com/ProjectInformaperu/LoginInformaPeru.git
     branch: master
     rootDir: backend
     dockerfilePath: Dockerfile
